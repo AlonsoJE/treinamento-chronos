@@ -9,8 +9,13 @@ import treinamento.chrono.treinamento.dto.ProcedimentoDto;
 import treinamento.chrono.treinamento.dto.SetorDto;
 import treinamento.chrono.treinamento.exception.GlobalException;
 import treinamento.chrono.treinamento.repository.SetorRepository;
+import treinamento.chrono.treinamento.util.CsvUtil;
 import treinamento.chrono.treinamento.util.StatusUtil;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,7 +53,10 @@ public class SetorService {
 
     public List<SetorDto> findAll(){
         log.info("[Setor] - findall");
-        return setorConverter.toDtoList(repository.findAll());
+        List<SetorDto> list = setorConverter.toDtoList(repository.findAll());
+        generateCsv(list);
+
+        return list;
     }
 
     public Optional<SetorDto> findById(Long idsetor){
@@ -62,6 +70,21 @@ public class SetorService {
         repository.deleteById(setorId);
     }
 
+    private void generateCsv(List<SetorDto> setorDtoList){
+        try {
+            List<String> list = new ArrayList<>();
+            String headers = "Identificador;Descrição;Status";
+            setorDtoList.forEach(setorDto -> {
+                list.add(String.format("%s; %s; %s",setorDto.getId().toString(),setorDto.getDescricao(),setorDto.getStatus().toString()));
+            });
+         Path arquivo =   CsvUtil.writeCsvFile(headers,list);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // RULES
+
     private void verifyId(Long setorId)  {
         log.info("[SetorService] - verifyId() whit id: '{}'", setorId);
         Optional.of(repository.findById(setorId)).filter(Optional::isPresent).orElseThrow(() ->
@@ -70,9 +93,6 @@ public class SetorService {
                         , String.format("Class: SetorService | Method: verifyId() whit id: %s and Return: %s", setorId, Optional.empty())
                         , HttpStatus.NOT_FOUND));
     }
-
-
-    // RULES
 
     private void verifyContentProcedimentoList(List<ProcedimentoDto> procedimentoDtoList){
         Optional.of(procedimentoDtoList).filter(procedimentoDtoList1 ->
