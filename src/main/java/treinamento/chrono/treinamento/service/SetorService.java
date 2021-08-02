@@ -13,7 +13,6 @@ import treinamento.chrono.treinamento.util.CsvUtil;
 import treinamento.chrono.treinamento.util.StatusUtil;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,10 +53,11 @@ public class SetorService {
     public List<SetorDto> findAll(){
         log.info("[Setor] - findall");
         List<SetorDto> list = setorConverter.toDtoList(repository.findAll());
-        generateCsv(list);
-
+        readCsv();
+//        generateCsv(list);
         return list;
     }
+
 
     public Optional<SetorDto> findById(Long idsetor){
         log.info("[Setor] - findById");
@@ -74,10 +74,18 @@ public class SetorService {
         try {
             List<String> list = new ArrayList<>();
             String headers = "Identificador;Descrição;Status";
+
             setorDtoList.forEach(setorDto -> {
-                list.add(String.format("%s; %s; %s",setorDto.getId().toString(),setorDto.getDescricao(),setorDto.getStatus().toString()));
+                list.add(String.format("%s; %s; %s;",setorDto.getId().toString(),setorDto.getDescricao(),setorDto.getStatus().toString()));
             });
-         Path arquivo =   CsvUtil.writeCsvFile(headers,list);
+            Path arquivo =   CsvUtil.writeCsvFile(headers,list);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    private void readCsv() {
+        try {
+            CsvUtil.readCsvFile();
         } catch (IOException e) {
             e.printStackTrace();
         }
